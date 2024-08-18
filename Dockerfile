@@ -2,8 +2,9 @@ FROM golang:latest
 
 WORKDIR /go/src/simplefin-bridge-exporter
 COPY . .
-RUN go build -o ./simplefin-bridge-exporter -ldflags "-linkmode external -extldflags -static" -a cmd/main.go
+RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o ./bin/simplefin-bridge-exporter cmd/main.go
 
-FROM gcr.io/distroless/static
-COPY --from=0 /go/src/simplefin-bridge-exporter /simplefin-bridge-exporter 
+FROM gcr.io/distroless/base
+COPY --from=0 /go/src/simplefin-bridge-exporter/bin/simplefin-bridge-exporter /simplefin-bridge-exporter 
+
 ENTRYPOINT ["/simplefin-bridge-exporter"]
