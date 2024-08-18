@@ -9,6 +9,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
+	"github.com/eduser25/simplefin-bridge-exporter/pkg/config"
 	"github.com/eduser25/simplefin-bridge-exporter/pkg/exporter"
 	"github.com/eduser25/simplefin-bridge-exporter/pkg/logger"
 	"github.com/eduser25/simplefin-bridge-exporter/pkg/simplefin"
@@ -21,12 +22,13 @@ const (
 )
 
 var (
-	setupToken     string = ""
-	accessUrl      string = ""
-	bindAddress    string = ""
-	debug          bool   = false
-	httpPort       int
-	updateInterval time.Duration
+	setupToken            string = ""
+	accessUrl             string = ""
+	accessUrlVolatileFile string = ""
+	bindAddress           string = ""
+	debug                 bool   = false
+	httpPort              int
+	updateInterval        time.Duration
 
 	httpServ http.Server
 
@@ -34,12 +36,17 @@ var (
 	log    = logger.NewZerologLogger()
 )
 
-func config() {
+func readAndDeleteFile() {
+
+}
+
+func parseConfig() {
 	var duration string
 	var err error
 
 	flag.StringVar(&setupToken, "setupToken", "", "SimpleFin setup Token")
 	flag.StringVar(&accessUrl, "accessUrl", "", "SimpleFin access URL")
+	flag.StringVar(&accessUrlVolatileFile, "accessUrlVolatileFile", "", "File where to read SimpleFin's Access Url, will 'delete the file or die'")
 	flag.BoolVar(&debug, "debug", false, "Enable debug")
 	flag.StringVar(&bindAddress, "bindAddress", defBindAddr, "Http server bind address")
 	flag.IntVar(&httpPort, "port", defHttpPort, "Http server port")
@@ -49,6 +56,13 @@ func config() {
 
 	if debug {
 		logger.SetDebug()
+	}
+
+	if accessUrlVolatileFile != "" {
+		accessUrl, err = config.ReadAndDeleteAccessURLFile(accessUrlVolatileFile)
+		if err != nil {
+			log.Fatal().Err(err).Msgf("failed to read AccessUrl config")
+		}
 	}
 
 	if accessUrl == "" && setupToken == "" {
@@ -99,7 +113,7 @@ func startExporterServer(e *exporter.Exporter) {
 }
 
 func main() {
-	config()
+	parseConfig()
 
 	exporter := exporter.NewExporter()
 	startExporterServer(exporter)
