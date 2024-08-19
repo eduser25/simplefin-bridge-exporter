@@ -5,6 +5,8 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -36,10 +38,6 @@ var (
 	log    = logger.NewZerologLogger()
 )
 
-func readAndDeleteFile() {
-
-}
-
 func parseConfig() {
 	var duration string
 	var err error
@@ -56,6 +54,7 @@ func parseConfig() {
 
 	if debug {
 		logger.SetDebug()
+		log.Debug().Msgf("starting, args: `%v`", strings.Join(os.Args[1:], " "))
 	}
 
 	if accessUrlVolatileFile != "" {
