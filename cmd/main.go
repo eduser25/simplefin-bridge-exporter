@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/k0kubun/pp/v3"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/eduser25/simplefin-bridge-exporter/pkg/config"
@@ -126,6 +127,9 @@ func main() {
 		if err != nil {
 			log.Error().Err(err).Msg("failed to fetch accounts")
 		} else {
+			if debug {
+				pp.Print(accounts)
+			}
 			exporter.Export(accounts)
 		}
 		log.Info().Msgf("done, took %v", time.Since(before).String())

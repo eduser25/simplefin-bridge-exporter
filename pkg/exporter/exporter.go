@@ -18,8 +18,9 @@ var (
 )
 
 type Exporter struct {
-	Registry *prometheus.Registry
-	balances *prometheus.GaugeVec
+	Registry          *prometheus.Registry
+	balances          *prometheus.GaugeVec
+	availableBalances *prometheus.GaugeVec
 }
 
 func NewExporter() *Exporter {
@@ -31,23 +32,48 @@ func NewExporter() *Exporter {
 				Name:      "balance",
 				Help:      "Account balance",
 			},
-			[]string{"domain", "account_name"},
+			[]string{"domain", "account_name", "check_ts", "currency"},
+		),
+		availableBalances: prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Namespace: namespace,
+				Name:      "available_balance",
+				Help:      "Available account balance",
+			},
+			[]string{"domain", "account_name", "check_ts", "currency"},
 		),
 	}
 	exporter.Registry.MustRegister(exporter.balances)
+	exporter.Registry.MustRegister(exporter.availableBalances)
 
 	return exporter
 }
 
 func (e *Exporter) Export(accounts *simplefin.Accounts) error {
 	for _, accItem := range accounts.Accounts {
+		// grafana translates ms, this is simplefin's balance date check
+		unixTs := uint64(accItem.BalanceDate) * 1000
+
 		bal, err := strconv.ParseFloat(accItem.Balance, 32)
 		if err != nil {
-			log.Error().Err(err).Msgf("Could not parse flot from %v - %v)",
+			log.Error().Err(err).Msgf("Could not parse balance from %v - %v)",
 				accItem.Org.Domain, accItem.Name)
+
+		} else {
+			e.balances.WithLabelValues(accItem.Org.Domain, accItem.Name,
+				strconv.FormatUint(unixTs, 10), accItem.Currency).Set(bal)
 		}
 
-		e.balances.WithLabelValues(accItem.Org.Domain, accItem.Name).Set(bal)
+		availBal, err := strconv.ParseFloat(accItem.AvailableBalance, 32)
+		if err != nil {
+			log.Error().Err(err).Msgf("Could not parse available balance from %v - %v)",
+				accItem.Org.Domain, accItem.Name)
+
+		} else {
+			e.availableBalances.WithLabelValues(accItem.Org.Domain, accItem.Name,
+				strconv.FormatUint(unixTs, 10), accItem.Currency).Set(availBal)
+		}
+
 	}
 	return nil
 }
