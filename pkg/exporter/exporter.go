@@ -51,8 +51,6 @@ func NewExporter() *Exporter {
 
 func (e *Exporter) Export(accounts *simplefin.Accounts) error {
 	for _, accItem := range accounts.Accounts {
-		// grafana translates ms, this is simplefin's balance date check
-		unixTs := uint64(accItem.BalanceDate) * 1000
 
 		bal, err := strconv.ParseFloat(accItem.Balance, 32)
 		if err != nil {
@@ -61,7 +59,7 @@ func (e *Exporter) Export(accounts *simplefin.Accounts) error {
 
 		} else {
 			e.balances.WithLabelValues(accItem.Org.Domain, accItem.Name,
-				strconv.FormatUint(unixTs, 10), accItem.Currency).Set(bal)
+				strconv.FormatInt(int64(accItem.BalanceDate), 10), accItem.Currency).Set(bal)
 		}
 
 		availBal, err := strconv.ParseFloat(accItem.AvailableBalance, 32)
@@ -71,7 +69,7 @@ func (e *Exporter) Export(accounts *simplefin.Accounts) error {
 
 		} else {
 			e.availableBalances.WithLabelValues(accItem.Org.Domain, accItem.Name,
-				strconv.FormatUint(unixTs, 10), accItem.Currency).Set(availBal)
+				strconv.FormatUint(uint64(accItem.BalanceDate), 10), accItem.Currency).Set(availBal)
 		}
 
 	}
