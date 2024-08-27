@@ -32,7 +32,7 @@ func NewExporter() *Exporter {
 				Name:      "balance",
 				Help:      "Account balance",
 			},
-			[]string{"domain", "account_name", "check_ts", "currency"},
+			[]string{"domain", "account_name", "currency"},
 		),
 		availableBalances: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
@@ -40,7 +40,7 @@ func NewExporter() *Exporter {
 				Name:      "available_balance",
 				Help:      "Available account balance",
 			},
-			[]string{"domain", "account_name", "check_ts", "currency"},
+			[]string{"domain", "account_name", "currency"},
 		),
 	}
 	exporter.Registry.MustRegister(exporter.balances)
@@ -58,8 +58,7 @@ func (e *Exporter) Export(accounts *simplefin.Accounts) error {
 				accItem.Org.Domain, accItem.Name)
 
 		} else {
-			e.balances.WithLabelValues(accItem.Org.Domain, accItem.Name,
-				strconv.FormatInt(int64(accItem.BalanceDate), 10), accItem.Currency).Set(bal)
+			e.balances.WithLabelValues(accItem.Org.Domain, accItem.Name, accItem.Currency).Set(bal)
 		}
 
 		availBal, err := strconv.ParseFloat(accItem.AvailableBalance, 32)
@@ -68,8 +67,7 @@ func (e *Exporter) Export(accounts *simplefin.Accounts) error {
 				accItem.Org.Domain, accItem.Name)
 
 		} else {
-			e.availableBalances.WithLabelValues(accItem.Org.Domain, accItem.Name,
-				strconv.FormatUint(uint64(accItem.BalanceDate), 10), accItem.Currency).Set(availBal)
+			e.availableBalances.WithLabelValues(accItem.Org.Domain, accItem.Name, accItem.Currency).Set(availBal)
 		}
 
 	}
