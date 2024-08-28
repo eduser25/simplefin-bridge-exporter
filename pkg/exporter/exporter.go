@@ -21,6 +21,7 @@ type Exporter struct {
 	Registry          *prometheus.Registry
 	balances          *prometheus.GaugeVec
 	availableBalances *prometheus.GaugeVec
+	last_updated      *prometheus.GaugeVec
 }
 
 func NewExporter() *Exporter {
@@ -42,6 +43,14 @@ func NewExporter() *Exporter {
 			},
 			[]string{"domain", "account_name", "currency"},
 		),
+		last_updated: prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Namespace: namespace,
+				Name:      "last_updated",
+				Help:      "Last updated, in Epoch Unitx Timestamp as reported by simplefin",
+			},
+			[]string{"domain", "account_name"},
+		),
 	}
 	exporter.Registry.MustRegister(exporter.balances)
 	exporter.Registry.MustRegister(exporter.availableBalances)
@@ -51,7 +60,6 @@ func NewExporter() *Exporter {
 
 func (e *Exporter) Export(accounts *simplefin.Accounts) error {
 	for _, accItem := range accounts.Accounts {
-
 		bal, err := strconv.ParseFloat(accItem.Balance, 32)
 		if err != nil {
 			log.Error().Err(err).Msgf("Could not parse balance from %v - %v)",
@@ -69,6 +77,8 @@ func (e *Exporter) Export(accounts *simplefin.Accounts) error {
 		} else {
 			e.availableBalances.WithLabelValues(accItem.Org.Domain, accItem.Name, accItem.Currency).Set(availBal)
 		}
+
+		e.last_updated.WithLabelValues(accItem.Org.Domain, accItem.Name).Set(float64(accItem.BalanceDate))
 
 	}
 	return nil
