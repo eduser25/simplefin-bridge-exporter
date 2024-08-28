@@ -54,6 +54,7 @@ func NewExporter() *Exporter {
 	}
 	exporter.Registry.MustRegister(exporter.balances)
 	exporter.Registry.MustRegister(exporter.availableBalances)
+	exporter.Registry.MustRegister(exporter.last_updated)
 
 	return exporter
 }
