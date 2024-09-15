@@ -13,7 +13,7 @@ Currently, this application only exposes balance, and no transaction information
 ## Getting started
 ### Prequisites
 
-- [SimpleFIN brdidge account](https://beta-bridge.simplefin.org/). You will need to be able to issue a `Setup token` or an `Access Url`. Refer to their developer documentation and make sure you understand the security concerns for storing either.
+- [SimpleFIN bridge account](https://beta-bridge.simplefin.org/). You will need to be able to issue a `Setup token` or an `Access Url`. Refer to their developer documentation and make sure you understand the security concerns for storing either.
 
 You can launch the application using their ready-to-use demo token:
 ```sh
